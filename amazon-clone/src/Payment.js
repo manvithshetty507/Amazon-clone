@@ -7,6 +7,7 @@ import { useStateValue } from "./StateProvider";
 import { getBasketTotal } from './reducer';
 import CheckoutProduct from './CheckoutProduct.js';
 import { useNavigate } from 'react-router-dom';
+import { db } from './firebase.js';
 
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import axios from './axios';
@@ -37,30 +38,47 @@ function Payment() {
         }
 
         getClientSecret();
-    }, [basket])
+    }, [basket]);
 
     
 
     const handleSubmit = async (event) => {
-        //implement stripe
+        // do all the fancy stripe stuff...
         event.preventDefault();
         setProcessing(true);
 
-        //we need client screte tomake transaction
-
-        const payload = await stripe.confirmCardPayment(clientSecret ,{
+        const payload = await stripe.confirmCardPayment(clientSecret, {
             payment_method: {
-                card:elements.getElement(CardElement)
+                card: elements.getElement(CardElement)
             }
-        }).then(({ paymentIntent} ) => {
-            //paymentIntent = payment confirmation
+        }).then(({ paymentIntent }) => {
+            // paymentIntent = payment confirmation
+
+            // db
+            //   .collection('users')
+            //   .doc(user?.uid)
+            //   .collection('orders')
+            //   .doc(paymentIntent.id)
+            //   .set({
+            //       basket: basket,
+            //       amount: paymentIntent.amount,
+            //       created: paymentIntent.created
+            //   })
+
             setSucceeded(true);
-            setError(null);
-            setProcessing(false);
+            setError(null)
+            setProcessing(false)
+
+            dispatch({
+                type: 'EMPTY_BASKET'
+            })
 
             navigate('/orders');
         })
+
+        console.log(payload);
     }
+    
 
     const handleChange = (event) => {
         //listen changes in card element and display any errors as customer types
@@ -134,8 +152,8 @@ function Payment() {
                             prefix={"$"}
                         ></CurrencyFormat>
                         <button disabled={processing || disabled || succeeded}>
-                        <span>{processing ? <p>Processing</p> : <p>Buy Now</p>}</span>
-                    </button>
+                            <span>{processing ? <p>Processing</p> : <p>Buy Now</p>}</span>
+                        </button>
                     </div>
                     {/* errors */}
                     {error && <div>{error}</div>}
