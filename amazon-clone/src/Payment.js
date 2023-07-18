@@ -62,15 +62,27 @@ function Payment() {
               setProcessing(false);
               setSucceeded(false);
             } else {
-              // Handle success case
-              setSucceeded(true);
-              setError(null);
-              setProcessing(false);
-              // Dispatch action, navigate, etc.
-              dispatch({
-                type: 'EMPTY_BASKET',
-              });
-              navigate('/orders');
+                const paymentIntent = result.paymentIntent;
+
+                // Store order details in the database
+                db.collection('users')
+                .doc(user?.uid)
+                .collection('orders')
+                .doc(paymentIntent.id)
+                .set({
+                    basket: basket,
+                    amount: paymentIntent.amount,
+                    created: paymentIntent.created,
+                });
+
+                setSucceeded(true);
+                setError(null);
+                setProcessing(false);
+                // Dispatch action, navigate, etc.
+                dispatch({
+                    type: 'EMPTY_BASKET',
+                });
+                navigate('/orders');
             }
           }).catch((error) => {
             // Handle error case
@@ -78,11 +90,8 @@ function Payment() {
             setProcessing(false);
             setSucceeded(false);
           });
-
-        console.log(payload);
     }
     
-
     const handleChange = (event) => {
         //listen changes in card element and display any errors as customer types
         setDisabled(event.empty);
