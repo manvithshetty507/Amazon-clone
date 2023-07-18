@@ -28,7 +28,7 @@ function Subtotal() {
         decimalScale={2}
         value={getBasketTotal(basket)} // Part of the homework
         displayType={"text"}
-        prefix={"$"}
+        prefix={"₹"}
       />
       <button onClick={e => user?navigate('/payment'):alert("please Log in")}>Proceed to checkout</button>
     </div>

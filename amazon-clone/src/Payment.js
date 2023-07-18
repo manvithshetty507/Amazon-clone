@@ -47,34 +47,37 @@ function Payment() {
         event.preventDefault();
         setProcessing(true);
 
-        const payload = await stripe.confirmCardPayment(clientSecret, {
+        console.log(CardElement);
+        
+        const payload = stripe.confirmCardPayment(clientSecret, {
             payment_method: {
                 card: elements.getElement(CardElement)
+              },
+              receipt_email: 'manvithshetty18@gmail.com', // Add the customer's email address
+              
+          }).then((result) => {
+            if (result.error) {
+              // Handle error case
+              setError(result.error.message);
+              setProcessing(false);
+              setSucceeded(false);
+            } else {
+              // Handle success case
+              setSucceeded(true);
+              setError(null);
+              setProcessing(false);
+              // Dispatch action, navigate, etc.
+              dispatch({
+                type: 'EMPTY_BASKET',
+              });
+              navigate('/orders');
             }
-        }).then(({ paymentIntent }) => {
-            // paymentIntent = payment confirmation
-
-            // db
-            //   .collection('users')
-            //   .doc(user?.uid)
-            //   .collection('orders')
-            //   .doc(paymentIntent.id)
-            //   .set({
-            //       basket: basket,
-            //       amount: paymentIntent.amount,
-            //       created: paymentIntent.created
-            //   })
-
-            setSucceeded(true);
-            setError(null)
-            setProcessing(false)
-
-            dispatch({
-                type: 'EMPTY_BASKET'
-            })
-
-            navigate('/orders');
-        })
+          }).catch((error) => {
+            // Handle error case
+            setError(error.message);
+            setProcessing(false);
+            setSucceeded(false);
+          });
 
         console.log(payload);
     }
@@ -149,7 +152,7 @@ function Payment() {
                             value={getBasketTotal(basket)}
                             displayType = "text"
                             thousandSeparator ={true}
-                            prefix={"$"}
+                            prefix={"₹"}
                         ></CurrencyFormat>
                         <button disabled={processing || disabled || succeeded}>
                             <span>{processing ? <p>Processing</p> : <p>Buy Now</p>}</span>

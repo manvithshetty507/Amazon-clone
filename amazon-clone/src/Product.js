@@ -26,7 +26,7 @@ const addToBasket = () => {
         <div className="product__info">
           <p className='product__name'>{title}</p>
           <p className="product__price">
-            <small>$</small>
+            <small>₹</small>
             <strong>{price}</strong>
           </p>
           <div className="product__rating">
