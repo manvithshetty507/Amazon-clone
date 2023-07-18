@@ -1,13 +1,15 @@
-import React, {useState} from 'react'
+import React, { createContext, useEffect, useState } from "react";
 import './Payment.css';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import CurrencyFormat from 'react-currency-format';
 
 import { useStateValue } from "./StateProvider";
 import { getBasketTotal } from './reducer';
 import CheckoutProduct from './CheckoutProduct.js';
+import { useNavigate } from 'react-router-dom';
 
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import axios from './axios';
 
 function Payment() {
 
@@ -15,12 +17,49 @@ function Payment() {
 
     const stripe = useStripe();
     const elements = useElements();
+    const navigate = useNavigate();
 
     const [error, setError] = useState(null);
     const [disabled, setDisabled] = useState(true);
+    const [clientSecret, setClientSecret ] = useState("");
+    const [succeeded, setSucceeded] = useState(false);
+    const [processing, setProcessing] = useState(""); 
 
-    const handleSubmit = (e) => {
+    useEffect(() => {
+        //generate stripe secrete which allows us to charrge, whenever basket change secrete also changes
+
+        const getClientSecret = async () => {
+            const response = await axios({
+                method: 'post',
+                url: `/payment/create?total=${getBasketTotal(basket) * 100}`
+            });
+            setClientSecret(response.data.clientSecret)
+        }
+
+        getClientSecret();
+    }, [basket])
+
+    
+
+    const handleSubmit = async (event) => {
         //implement stripe
+        event.preventDefault();
+        setProcessing(true);
+
+        //we need client screte tomake transaction
+
+        const payload = await stripe.confirmCardPayment(clientSecret ,{
+            payment_method: {
+                card:elements.getElement(CardElement)
+            }
+        }).then(({ paymentIntent} ) => {
+            //paymentIntent = payment confirmation
+            setSucceeded(true);
+            setError(null);
+            setProcessing(false);
+
+            navigate('/orders');
+        })
     }
 
     const handleChange = (event) => {
@@ -92,9 +131,14 @@ function Payment() {
                             value={getBasketTotal(basket)}
                             displayType = "text"
                             thousandSeparator ={true}
-                            prefix={"₹"}
+                            prefix={"$"}
                         ></CurrencyFormat>
+                        <button disabled={processing || disabled || succeeded}>
+                        <span>{processing ? <p>Processing</p> : <p>Buy Now</p>}</span>
+                    </button>
                     </div>
+                    {/* errors */}
+                    {error && <div>{error}</div>}
                  </form>
             </div>
         </div>
