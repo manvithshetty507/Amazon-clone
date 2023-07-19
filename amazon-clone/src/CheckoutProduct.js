@@ -3,7 +3,7 @@ import './CheckoutProduct.css'
 
 import { useStateValue } from "./StateProvider";
 
-function CheckoutProduct({id, img, title, price, rating}) {
+function CheckoutProduct({id, img, title, price, rating,hidebutton}) {
 
   const [{ basket }, dispatch] = useStateValue();
 
@@ -34,7 +34,10 @@ function CheckoutProduct({id, img, title, price, rating}) {
                 (<p>⭐</p>)
             )}
         </div>
-        <button onClick={removeFromBasket}>Remove From basket</button>
+        {!hidebutton && (
+          <button onClick={removeFromBasket}>Remove From basket</button>
+        )}
+        
       </div>
       
     </div>
